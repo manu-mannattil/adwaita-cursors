@@ -21,7 +21,7 @@ directory, e.g.,
 
     tar xvzf adwaita-cursors.tar.gz
     mkdir -p ~/.icons/default
-    mv Adwaita/cursors ~/.icons/default
+    mv adwaita-cursors/Adwaita/cursors ~/.icons/default
 
 and set the desired cursor size in `~/.Xresources`, e.g.,
 
