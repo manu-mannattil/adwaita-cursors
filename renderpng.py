@@ -77,7 +77,7 @@ class SVGRect:
             os.system("mkdir -p png/%sx%s" % (size, size))
             if os.path.exists("png/%sx%s/%s" % (size, size, sliceFName)):
                 continue
-            rc = os.system('inkscape --without-gui -w %s -h %s --export-id="%s" --export-png="png/%sx%s/%s" "%s"' % (size, size, self.name, size, size, sliceFName, svgFName))
+            rc = os.system('inkscape -w %s -h %s --export-id="%s" --export-filename="png/%sx%s/%s" "%s"' % (size, size, self.name, size, size, sliceFName, svgFName))
             if rc > 0:
                 fatalError('ABORTING: Inkscape failed to render the slice.')
 
