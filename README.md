@@ -14,7 +14,7 @@ been adapted from Fedora Project's [patches][4] to the DMZ cursor
 package, which also adds [CSS cursor values][5].
 
 Finally, a script (`colorize.py`) that colorizes the black Adwaita
-cursors have also been provided.  This can be used to generate garishly
+cursors has also been provided.  This can be used to generate garishly
 colorized cursors for use, e.g., with presentations.  (A red version of
 the cursors is provided with the latest release.)  This can be used on
 a per-application basis:
