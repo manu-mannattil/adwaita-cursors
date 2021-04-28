@@ -2,12 +2,38 @@
 # -*- coding: utf-8 -*-
 #
 # This script will colorize adwaita.svg and produce colored cursors.
-# E.g., to make red-colored cursors:
+# As an example, to make red-colored cursors, first colorize the source
+# SVG:
 #
 #   ./colorize.py "#ff0000" >adwaita-red.svg
 #
+# Then replace the source SVG with the colorized one and run make after
+# a distclean.
+#
+#   mv -f adwaita-red.svg adwaita.svg
+#   make distclean
+#   make
+#
+# Finally, edit the .theme files in the "Adwaita" directory to reflect
+# the color change and change the directory name as well.
+#
 
 import re, sys
+import xml.etree.ElementTree as ET
+
+
+NAMESPACE = {
+    "": "http://www.w3.org/2000/svg",
+    "cc": "http://creativecommons.org/ns#",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "inkscape": "http://www.inkscape.org/namespaces/inkscape",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
+    "xlink": "http://www.w3.org/1999/xlink",
+}
+
+for prefix, uri in NAMESPACE.items():
+    ET.register_namespace(prefix, uri)
 
 
 class Colorizer:
@@ -32,10 +58,21 @@ class Colorizer:
 
     def colorize(self, name):
         """Colorize each hex color match in the file."""
-        with open(name) as fd:
-            content = fd.read()
+        tree = ET.parse(name)
+        root = tree.getroot()
 
-        return re.sub(r"#(\d{6})", self.repl, content)
+        for layer in root:
+            # Only change the colors in the definitions and the "cursor" layer.
+            if layer.attrib["id"] in ("defs4", "layer1"):
+                for child in layer.findall(".//*[@style]", NAMESPACE):
+                    # Technically, we should be replacing all hex colors, but
+                    # for reasons I don't have time to investigate, using
+                    # [0-9a-f] in the regex produces a yellow haze.
+                    child.attrib["style"] = re.sub(
+                        r"#(\d{6})", self.repl, child.attrib["style"]
+                    )
+
+        return ET.tostring(root, encoding="unicode")
 
     def __init__(self, desired):
         self.desired = self.hex2rgb(desired)
