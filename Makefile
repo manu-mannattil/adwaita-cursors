@@ -47,6 +47,7 @@ all: png_hl
 	  ln   -sf   all-scroll            fleur;                            \
 	  ln   -sf   all-scroll            size_all;                         \
 	  ln   -sf   hand1                 grab;                             \
+	  ln   -sf   hand1                 openhand;                         \
 	  ln   -sf   hand2                 9d800788f1b08800ae810202380a0822; \
 	  ln   -sf   hand2                 e29285e634086352946a0e7090d73106; \
 	  ln   -sf   hand2                 hand;                             \
@@ -54,7 +55,6 @@ all: png_hl
 	  ln   -sf   hand2                 pointing_hand;                    \
 	  ln   -sf   left_ptr              arrow;                            \
 	  ln   -sf   left_ptr              default;                          \
-	  ln   -sf   left_ptr              openhand;                         \
 	  ln   -sf   left_ptr              top_left_arrow;                   \
 	  ln   -sf   left_ptr_watch        08e8e1c95fe2fc01f976f1e063a24ccd; \
 	  ln   -sf   left_ptr_watch        3ecb610c1bf2410f44200f48c40d3599; \
