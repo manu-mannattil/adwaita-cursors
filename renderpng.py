@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # SVGSlice
 #
@@ -34,10 +34,36 @@ from multiprocessing.pool import ThreadPool
 DEFAULT_THREADS = cpu_count()
 
 optParser = OptionParser()
-optParser.add_option('-d','--debug',action='store_true',dest='debug',help='Enable extra debugging info.')
-optParser.add_option('-t','--test',action='store_true',dest='testing',help='Test mode: leave temporary files for examination.')
-optParser.add_option('-p','--sliceprefix',action='store',dest='sliceprefix',help='Specifies the prefix to use for individual slice filenames.')
-optParser.add_option('-j','--jobs',action='store',type=int,dest='jobs',default=DEFAULT_THREADS,help='Number of jobs to be run at the same time.')
+optParser.add_option(
+    "-d",
+    "--debug",
+    action="store_true",
+    dest="debug",
+    help="Enable extra debugging info.",
+)
+optParser.add_option(
+    "-t",
+    "--test",
+    action="store_true",
+    dest="testing",
+    help="Test mode: leave temporary files for examination.",
+)
+optParser.add_option(
+    "-p",
+    "--sliceprefix",
+    action="store",
+    dest="sliceprefix",
+    help="Specifies the prefix to use for individual slice filenames.",
+)
+optParser.add_option(
+    "-j",
+    "--jobs",
+    action="store",
+    type=int,
+    dest="jobs",
+    default=DEFAULT_THREADS,
+    help="Number of jobs to be run at the same time.",
+)
 
 from xml.sax import saxutils, make_parser, SAXParseException
 from xml.sax.handler import feature_namespaces
@@ -52,9 +78,11 @@ def dbg(msg):
     if options.debug:
         sys.stderr.write(msg)
 
+
 def cleanup():
     if svgFilename != None and os.path.exists(svgFilename):
         os.unlink(svgFilename)
+
 
 def fatalError(msg):
     sys.stderr.write(msg)
@@ -64,7 +92,8 @@ def fatalError(msg):
 
 class SVGRect:
     """Manages a simple rectangular area, along with certain attributes such as a name"""
-    def __init__(self, x1,y1,x2,y2, name=None):
+
+    def __init__(self, x1, y1, x2, y2, name=None):
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
@@ -77,47 +106,54 @@ class SVGRect:
             os.system("mkdir -p png/%sx%s" % (size, size))
             if os.path.exists("png/%sx%s/%s" % (size, size, sliceFName)):
                 continue
-            rc = os.system('inkscape -w %s -h %s --export-id="%s" --export-filename="png/%sx%s/%s" "%s"' % (size, size, self.name, size, size, sliceFName, svgFName))
+            rc = os.system(
+                'inkscape -w %s -h %s --export-id="%s" --export-filename="png/%sx%s/%s" "%s"'
+                % (size, size, self.name, size, size, sliceFName, svgFName)
+            )
             if rc > 0:
-                fatalError('ABORTING: Inkscape failed to render the slice.')
+                fatalError("ABORTING: Inkscape failed to render the slice.")
 
 
 class SVGHandler(saxutils.xmlreader.handler.ContentHandler):
     """Base class for SVG parsers"""
+
     def __init__(self):
-        self.pageBounds = SVGRect(0,0,0,0)
+        self.pageBounds = SVGRect(0, 0, 0, 0)
 
     def isFloat(self, stringVal):
         try:
             return (float(stringVal), True)[1]
-        except (ValueError, TypeError), e:
+        except (ValueError, TypeError) as e:
             return False
 
     def parseCoordinates(self, val):
         """Strips the units from a coordinate, and returns just the value."""
-        if val.endswith('px'):
-            val = float(val.rstrip('px'))
-        elif val.endswith('pt'):
-            val = float(val.rstrip('pt'))
-        elif val.endswith('cm'):
-            val = float(val.rstrip('cm'))
-        elif val.endswith('mm'):
-            val = float(val.rstrip('mm'))
-        elif val.endswith('in'):
-            val = float(val.rstrip('in'))
-        elif val.endswith('%'):
-            val = float(val.rstrip('%'))
+        if val.endswith("px"):
+            val = float(val.rstrip("px"))
+        elif val.endswith("pt"):
+            val = float(val.rstrip("pt"))
+        elif val.endswith("cm"):
+            val = float(val.rstrip("cm"))
+        elif val.endswith("mm"):
+            val = float(val.rstrip("mm"))
+        elif val.endswith("in"):
+            val = float(val.rstrip("in"))
+        elif val.endswith("%"):
+            val = float(val.rstrip("%"))
         elif self.isFloat(val):
             val = float(val)
         else:
-            fatalError("Coordinate value %s has unrecognised units.  Only px,pt,cm,mm,and in units are currently supported." % val)
+            fatalError(
+                "Coordinate value %s has unrecognised units.  Only px,pt,cm,mm,and in units are currently supported."
+                % val
+            )
         return val
 
     def startElement_svg(self, name, attrs):
         """Callback hook which handles the start of an svg image"""
-        dbg('startElement_svg called')
-        width = attrs.get('width', None)
-        height = attrs.get('height', None)
+        dbg("startElement_svg called")
+        width = attrs.get("width", None)
+        height = attrs.get("height", None)
         self.pageBounds.x2 = self.parseCoordinates(width)
         self.pageBounds.y2 = self.parseCoordinates(height)
 
@@ -128,13 +164,14 @@ class SVGHandler(saxutils.xmlreader.handler.ContentHandler):
 
 class SVGLayerHandler(SVGHandler):
     """Parses an SVG file, extracing slicing rectangles from a "slices" layer"""
+
     def __init__(self):
         SVGHandler.__init__(self)
         self.svg_rects = []
         self.layer_nests = 0
 
     def inSlicesLayer(self):
-        return (self.layer_nests >= 1)
+        return self.layer_nests >= 1
 
     def add(self, rect):
         """Adds the given rect to the list of rectangles successfully parsed"""
@@ -144,9 +181,9 @@ class SVGLayerHandler(SVGHandler):
         """Callback hook for parsing layer elements
 
         Checks to see if we're starting to parse a slices layer, and sets the appropriate flags.  Otherwise, the layer will simply be ignored."""
-        dbg('found layer: name="%s" id="%s"' % (name, attrs['id']))
-        if attrs.get('inkscape:groupmode', None) == 'layer':
-            if self.inSlicesLayer() or attrs['inkscape:label'] == 'slices':
+        dbg('found layer: name="%s" id="%s"' % (name, attrs["id"]))
+        if attrs.get("inkscape:groupmode", None) == "layer":
+            if self.inSlicesLayer() or attrs["inkscape:label"] == "slices":
                 self.layer_nests += 1
 
     def endElement_layer(self, name):
@@ -163,56 +200,65 @@ class SVGLayerHandler(SVGHandler):
         Checks if we're currently in a special "slices" layer using flags set by startElement_layer().  If we are, the current rectangle is considered to be a slice, and is added to the list of parsed
         rectangles.  Otherwise, it will be ignored."""
         if self.inSlicesLayer():
-            x1 = self.parseCoordinates(attrs['x'])
-            y1 = self.parseCoordinates(attrs['y'])
-            x2 = self.parseCoordinates(attrs['width']) + x1
-            y2 = self.parseCoordinates(attrs['height']) + y1
-            name = attrs['id']
-            rect = SVGRect(x1,y1, x2,y2, name)
+            x1 = self.parseCoordinates(attrs["x"])
+            y1 = self.parseCoordinates(attrs["y"])
+            x2 = self.parseCoordinates(attrs["width"]) + x1
+            y2 = self.parseCoordinates(attrs["height"]) + y1
+            name = attrs["id"]
+            rect = SVGRect(x1, y1, x2, y2, name)
             self.add(rect)
 
     def startElement(self, name, attrs):
         """Generic hook for examining and/or parsing all SVG tags"""
         if options.debug:
             dbg('Beginning element "%s"' % name)
-        if name == 'svg':
+        if name == "svg":
             self.startElement_svg(name, attrs)
-        elif name == 'g':
+        elif name == "g":
             # inkscape layers are groups, I guess, hence 'g'
             self.startElement_layer(name, attrs)
-        elif name == 'rect':
+        elif name == "rect":
             self.startElement_rect(name, attrs)
 
     def endElement(self, name):
         """Generic hook called when the parser is leaving each SVG tag"""
         dbg('Ending element "%s"' % name)
-        if name == 'g':
+        if name == "g":
             self.endElement_layer(name)
 
     def generateXHTMLPage(self):
         """Generates an XHTML page for the SVG rectangles previously parsed."""
         write = sys.stdout.write
         write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        write('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">\n')
+        write(
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">\n'
+        )
         write('<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">\n')
-        write('    <head>\n')
-        write('        <title>Sample SVGSlice Output</title>\n')
-        write('    </head>\n')
-        write('    <body>\n')
-        write('        <p>Sorry, SVGSlice\'s XHTML output is currently very basic.  Hopefully, it will serve as a quick way to preview all generated slices in your browser, and perhaps as a starting point for further layout work.  Feel free to write it and submit a patch to the author :)</p>\n')
+        write("    <head>\n")
+        write("        <title>Sample SVGSlice Output</title>\n")
+        write("    </head>\n")
+        write("    <body>\n")
+        write(
+            "        <p>Sorry, SVGSlice's XHTML output is currently very basic.  Hopefully, it will serve as a quick way to preview all generated slices in your browser, and perhaps as a starting point for further layout work.  Feel free to write it and submit a patch to the author :)</p>\n"
+        )
 
-        write('        <p>')
+        write("        <p>")
         for rect in self.svg_rects:
-            write('            <img src="%s" alt="%s (please add real alternative text for this image)" longdesc="Please add a full description of this image" />\n' % (sliceprefix + rect.name + '.png', rect.name))
-        write('        </p>')
+            write(
+                '            <img src="%s" alt="%s (please add real alternative text for this image)" longdesc="Please add a full description of this image" />\n'
+                % (sliceprefix + rect.name + ".png", rect.name)
+            )
+        write("        </p>")
 
-        write('<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>')
+        write(
+            '<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>'
+        )
 
-        write('    </body>\n')
-        write('</html>\n')
+        write("    </body>\n")
+        write("</html>\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # parse command line into arguments and options
     (options, args) = optParser.parse_args()
 
@@ -225,7 +271,7 @@ if __name__ == '__main__':
     else:
         pngSizes = range(24, 96 + 1, 6)
 
-    svgFilename = os.path.splitext(originalFilename)[0] + '_copy.svg'
+    svgFilename = os.path.splitext(originalFilename)[0] + "_copy.svg"
     shutil.copyfile(originalFilename, svgFilename)
 
     # setup program variables from command line (in other words, handle non-option args)
@@ -234,10 +280,10 @@ if __name__ == '__main__':
     if options.sliceprefix:
         sliceprefix = options.sliceprefix
     else:
-        sliceprefix = ''
+        sliceprefix = ""
 
     # initialise results before actually attempting to parse the SVG file
-    svgBounds = SVGRect(0,0,0,0)
+    svgBounds = SVGRect(0, 0, 0, 0)
     rectList = []
 
     # Try to parse the svg file
@@ -249,27 +295,33 @@ if __name__ == '__main__':
     xmlParser.setContentHandler(svgLayerHandler)
     try:
         xmlParser.parse(svgFilename)
-    except SAXParseException, e:
-        fatalError("Error parsing SVG file '%s': line %d,col %d: %s.  If you're seeing this within inkscape, it probably indicates a bug that should be reported." % (svgFilename, e.getLineNumber(), e.getColumnNumber(), e.getMessage()))
+    except SAXParseException as e:
+        fatalError(
+            "Error parsing SVG file '%s': line %d,col %d: %s.  If you're seeing this within inkscape, it probably indicates a bug that should be reported."
+            % (svgFilename, e.getLineNumber(), e.getColumnNumber(), e.getMessage())
+        )
 
     # verify that the svg file actually contained some rectangles.
     if len(svgLayerHandler.svg_rects) == 0:
-        fatalError("""No slices were found in this SVG file.  Please refer to the documentation for guidance on how to use this SVGSlice.  As a quick summary:
+        fatalError(
+            """No slices were found in this SVG file.  Please refer to the documentation for guidance on how to use this SVGSlice.  As a quick summary:
 
-""" + usageMsg)
+"""
+            + usageMsg
+        )
     else:
         dbg("Parsing successful.")
 
     def render(rect):
-        sliceFName = sliceprefix + rect.name + '.png'
+        sliceFName = sliceprefix + rect.name + ".png"
 
         dbg('Saving slice as: "%s"' % sliceFName)
         rect.renderFromSVG(svgFilename, sliceFName)
 
-    dbg('Number of threads = %d' % options.jobs)
+    dbg("Number of threads = %d" % options.jobs)
     pool = ThreadPool(options.jobs)
     pool.map(render, svgLayerHandler.svg_rects)
 
     cleanup()
 
-    dbg('Slicing complete.')
+    dbg("Slicing complete.")
