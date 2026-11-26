@@ -53,7 +53,14 @@ Prerequisites:
 - [xcursorgen](https://wiki.archlinux.org/title/Xcursorgen)
 - Python package `pypng`
 
-Run `./colorize.py "#eb2b86" "#02fbfd" > adwaita-pink-blau.svg` to generate the SVG-File with all cursors and finish with e.g. `SIZES='78' make` or `SIZES='78' make tarball` to create a tarball. 
+Generate the SVG-File with all cursors 
+
+    `./colorize.py "#eb2b86" "#02fbfd" > adwaita-pink-blau.svg`
+
+and finish with e.g. 
+
+    `SIZES='78' make` or `SIZES='78' make tarball`.
+
 
 ## See also
 
