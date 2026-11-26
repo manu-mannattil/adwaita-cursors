@@ -48,6 +48,20 @@ This requires xcursorgen and Python.  To generate the cursors completely
 from scratch, including the PNG files, clone the repository and run
 `make`.  Note that you will also need Inkscape for this.
 
+## Colorize the Cursor
+Prerequisites:
+- [xcursorgen](https://wiki.archlinux.org/title/Xcursorgen)
+- Python package `pypng`
+
+Generate the SVG-File with all cursors 
+
+    `./colorize.py "#eb2b86" "#02fbfd" > adwaita-pink-blau.svg`
+
+and finish with e.g. 
+
+    `SIZES='78' make` or `SIZES='78' make tarball`.
+
+
 ## See also
 
 [DMZ cursors in various sizes][6]

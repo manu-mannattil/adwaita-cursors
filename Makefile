@@ -99,7 +99,7 @@ all: png_hl
 	done
 
 png: adwaita.svg
-	./renderpng.py $^ $(SIZES)
+	./renderpng.py -j 1 $^ $(SIZES)
 
 png_hl: png genin.py genhighlight.py
 	./genin.py $(SIZES)

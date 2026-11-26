@@ -46,15 +46,25 @@ class Colorizer:
         return "#{:02x}{:02x}{:02x}".format(*rgb)
 
     def repl(self, match):
-        """Colorize each matched color."""
-        # Gimp's "lighten only" algorithm.
-        # https://docs.gimp.org/en/gimp-concepts-layer-modes.html
-        color = self.hex2rgb(match.group(1))
-        for i in range(3):
-            if color[i] < self.desired[i]:
-                color[i] = self.desired[i]
+        """Map original brightness from border color to main color."""
+        color = self.hex2rgb("#" + match.group(1))
 
-        return self.rgb2hex(color)
+        # Approximate perceived brightness: 0.0 (dark) to 1.0 (light).
+        t = (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]) / 255
+
+        result = [round(self.border[i] * (1 - t) + self.main[i] * t) for i in range(3)]
+        return self.rgb2hex(result)
+
+    # def repl(self, match):
+    #     """Colorize each matched color."""
+    #     # Gimp's "lighten only" algorithm.
+    #     # https://docs.gimp.org/en/gimp-concepts-layer-modes.html
+    #     color = self.hex2rgb(match.group(1))
+    #     for i in range(3):
+    #         if color[i] < self.desired[i]:
+    #             color[i] = self.desired[i]
+
+    #     return self.rgb2hex(color)
 
     def colorize(self, name):
         """Colorize each hex color match in the file."""
@@ -69,19 +79,20 @@ class Colorizer:
                     # for reasons I don't have time to investigate, using
                     # [0-9a-f] in the regex produces a yellow haze.
                     child.attrib["style"] = re.sub(
-                        r"#(\d{6})", self.repl, child.attrib["style"]
+                        r"#([0-9a-fA-F]{6})", self.repl, child.attrib["style"]
                     )
 
         return ET.tostring(root, encoding="unicode")
 
-    def __init__(self, desired):
-        self.desired = self.hex2rgb(desired)
+    def __init__(self, border_color, main_color):
+        self.border = self.hex2rgb(border_color)
+        self.main = self.hex2rgb(main_color)
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        col = Colorizer(sys.argv[1])
+        col = Colorizer(sys.argv[1], sys.argv[2])
     else:
-        col = Colorizer("#000000")
+        col = Colorizer("#000000", "#ffffff")
 
     print(col.colorize("adwaita.svg"), file=sys.stdout)
