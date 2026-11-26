@@ -50,7 +50,7 @@ from scratch, including the PNG files, clone the repository and run
 
 ## Colorize the Cursor
 Prerequisites:
-- #link(https://wiki.archlinux.org/title/Xcursorgen)[xcursorgen]
+- [xcursorgen](https://wiki.archlinux.org/title/Xcursorgen)
 - Python package `pypng`
 
 Run `./colorize.py "#eb2b86" "#02fbfd" > adwaita-pink-blau.svg` to generate the SVG-File with all cursors and finish with e.g. `SIZES='78' make` or `SIZES='78' make tarball` to create a tarball. 
